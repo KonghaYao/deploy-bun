@@ -5,6 +5,6 @@
         "dist": "./dist",
         "entrypoint": "./index.js",
         "port": 3000,
-        "server": "http://localhost:7899"
+        "server": "http:///43.153.213.126:7899"
     }
 }

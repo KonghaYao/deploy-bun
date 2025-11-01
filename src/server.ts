@@ -6,6 +6,15 @@ import type { Server } from "bun";
 
 const UPLOAD_PORT = 7899;
 const DEPLOYMENTS_DIR = resolve(process.cwd(), "deployments");
+const STATE_FILE = join(DEPLOYMENTS_DIR, ".state.json");
+
+// 部署状态接口
+interface DeploymentState {
+    hash: string;
+    port: number;
+    entrypoint: string;
+    timestamp: string;
+}
 
 // 确保部署目录存在
 if (!existsSync(DEPLOYMENTS_DIR)) {
@@ -14,6 +23,43 @@ if (!existsSync(DEPLOYMENTS_DIR)) {
 
 let currentAppServer: Server<unknown> | null = null;
 let currentDeploymentHash: string | null = null;
+
+// 保存部署状态
+async function saveDeploymentState(
+    hash: string,
+    port: number,
+    entrypoint: string
+): Promise<void> {
+    const state: DeploymentState = {
+        hash,
+        port,
+        entrypoint,
+        timestamp: new Date().toISOString(),
+    };
+    await Bun.write(STATE_FILE, JSON.stringify(state, null, 2));
+    console.log(`[SERVER] 状态已保存到: ${STATE_FILE}`);
+}
+
+// 加载部署状态
+async function loadDeploymentState(): Promise<DeploymentState | null> {
+    if (!existsSync(STATE_FILE)) {
+        return null;
+    }
+
+    try {
+        const content = await Bun.file(STATE_FILE).text();
+        const state: DeploymentState = JSON.parse(content);
+        console.log(`[SERVER] 从状态文件加载上次部署信息`);
+        console.log(`[SERVER] - 版本: ${state.hash}`);
+        console.log(`[SERVER] - 端口: ${state.port}`);
+        console.log(`[SERVER] - 入口: ${state.entrypoint}`);
+        console.log(`[SERVER] - 时间: ${state.timestamp}`);
+        return state;
+    } catch (error) {
+        console.error(`[SERVER] 读取状态文件失败:`, error);
+        return null;
+    }
+}
 
 async function stopCurrentApp() {
     if (currentAppServer) {
@@ -58,6 +104,9 @@ async function startApp(hash: string, port: number, entrypoint: string) {
     currentDeploymentHash = hash;
     console.log(`[SERVER] ✅ 应用启动成功！`);
     console.log(`[SERVER] 访问地址: http://localhost:${port}`);
+
+    // 保存状态
+    await saveDeploymentState(hash, port, entrypoint);
 }
 
 async function handleUpload(request: Request): Promise<Response> {
@@ -203,6 +252,37 @@ console.log(`[SERVER] ✅ 上传服务器已启动`);
 console.log(`[SERVER] 上传端口: ${UPLOAD_PORT}`);
 console.log(`[SERVER] 部署目录: ${DEPLOYMENTS_DIR}`);
 console.log(`[SERVER] 访问 http://localhost:${UPLOAD_PORT}/status 查看状态`);
+
+// 尝试恢复上一次的部署
+(async () => {
+    console.log(`[SERVER] ========================================`);
+    console.log(`[SERVER] 检查是否需要恢复上次部署...`);
+    const lastState = await loadDeploymentState();
+
+    if (lastState) {
+        const deploymentPath = join(DEPLOYMENTS_DIR, lastState.hash);
+        if (existsSync(deploymentPath)) {
+            console.log(`[SERVER] 发现上次部署，准备恢复...`);
+            try {
+                await startApp(
+                    lastState.hash,
+                    lastState.port,
+                    lastState.entrypoint
+                );
+                console.log(`[SERVER] ✅ 上次部署已恢复`);
+            } catch (error) {
+                console.error(`[SERVER] ❌ 恢复上次部署失败:`, error);
+            }
+        } else {
+            console.log(
+                `[SERVER] 上次部署的文件不存在，跳过恢复: ${deploymentPath}`
+            );
+        }
+    } else {
+        console.log(`[SERVER] 未找到上次部署记录`);
+    }
+    console.log(`[SERVER] ========================================`);
+})();
 
 // 优雅退出
 process.on("SIGINT", async () => {

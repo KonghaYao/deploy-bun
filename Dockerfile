@@ -8,9 +8,12 @@ COPY src/ /app/src/
 # 创建部署目录
 RUN mkdir -p /app/deployments
 
+# 声明持久化卷（包含部署文件和状态文件）
+VOLUME ["/app/deployments"]
+
 # 暴露上传端口（7899）和应用端口范围
 EXPOSE 7899
-EXPOSE 3000-3100
+EXPOSE 3000
 
 # 设置环境变量
 ENV NODE_ENV=production

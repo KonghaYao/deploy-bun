@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  deploy-server:
+    build: .
+    # 或使用镜像：
+    # image: ghcr.io/konghayao/deploy-bun:latest
+    container_name: deploy-bun-server
+    ports:
+      - "7899:7899" # 上传端口
+      - "3000:3000" # 应用端口
+    volumes:
+      # 持久化部署目录和状态文件
+      - deploy-data:/app/deployments
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "bun",
+          "-e",
+          "fetch('http://localhost:7899/status').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  deploy-data:
+    driver: local

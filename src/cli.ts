@@ -162,7 +162,10 @@ async function main() {
         await createTarGz(distPath, tarFile);
 
         // 上传到服务器
-        const serverUrl = config.deploy.server || "http://localhost:7899";
+        const serverUrl =
+            config.deploy.server ||
+            process.env.DEPLOY_SERVER_URL ||
+            "http://localhost:7899";
         await uploadToServer(tarFile, serverUrl, config);
 
         // 清理临时文件

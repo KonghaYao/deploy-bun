@@ -92,7 +92,9 @@ deploy-bun
 | `deploy.dist`       | Build output directory                    | Yes      |
 | `deploy.entrypoint` | Application entry file (relative to dist) | Yes      |
 | `deploy.port`       | Port for your application                 | Yes      |
-| `deploy.server`     | Deployment server URL                     | Yes      |
+| `deploy.server`     | Deployment server URL                     | No\*     |
+
+\* Can be set via `DEPLOY_SERVER_URL` environment variable
 
 ### Example Configurations
 

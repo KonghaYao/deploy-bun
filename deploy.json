@@ -1,0 +1,10 @@
+{
+    "name": "deploy-bun",
+    "build": "bun build src/index.ts --outdir dist",
+    "deploy": {
+        "dist": "./dist",
+        "entrypoint": "./index.js",
+        "port": 3000,
+        "server": "http://localhost:7899"
+    }
+}

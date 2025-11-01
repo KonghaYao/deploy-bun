@@ -1,0 +1,51 @@
+# Git
+.git
+.gitignore
+
+# CI/CD
+.github
+
+# Node modules and dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Build outputs
+dist
+*.tgz
+
+# Development files
+*.md
+README.md
+LICENSE
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files
+test
+tests
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+
+# Deployment files
+deployments
+deploy.json
+
+# Temporary files
+tmp
+temp
+*.tmp
+.env
+.env.*
+

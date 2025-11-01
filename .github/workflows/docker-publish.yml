@@ -39,6 +39,10 @@ jobs:
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
 
+            - name: Get current timestamp
+              id: timestamp
+              run: echo "timestamp=$(date -u +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
+
             - name: Extract metadata (tags, labels)
               id: meta
               uses: docker/metadata-action@v5
@@ -52,6 +56,8 @@ jobs:
                       type=semver,pattern={{major}}
                       type=sha,prefix={{branch}}-
                       type=raw,value=latest,enable={{is_default_branch}}
+                      type=raw,value=${{ steps.timestamp.outputs.timestamp }}
+                      type=raw,value={{branch}}-${{ steps.timestamp.outputs.timestamp }},enable={{is_default_branch}}
 
             - name: Build and push Docker image
               id: build-push
